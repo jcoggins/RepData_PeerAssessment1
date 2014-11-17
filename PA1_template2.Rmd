@@ -140,7 +140,7 @@ xyplot(steps ~ interval | weekDaysLabels,
 ```
   
 The heights of the peaks in the weekend  
-graph and higher than the peaks in the   
+graph are higher than the peaks in the   
 weekday graph, except  for the one peak   
 around 800. Most people sit at work  
 (no stepping). On Weekends more people   
