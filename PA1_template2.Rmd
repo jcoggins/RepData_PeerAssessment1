@@ -1,0 +1,155 @@
+Loading and preprocessing the data
+===================================
+##Setup for knitr:  
+
+```{r setup, echo=TRUE}
+path = "C:/R-Working Directory/Reproducible Research/PeerAssignment1"
+setwd(path)
+library(knitr)
+```
+
+##Here's my download process:  
+
+```{r download, echo=TRUE}
+if(!file.exists("./files")) { dir.create("./files")}
+fileurl <- "http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+destFile <- "repdata-data-activity.zip"
+download.file(fileurl, destfile=paste("files", destFile, sep="/"))
+```
+
+##Unzip the file and set the date of download:  
+```{r unzip,echo=TRUE}
+unzip(paste("files", destFile, sep="/"), exdir="files")
+data_dir <- setdiff(dir("files"), destFile)
+dateDownloaded <- date()
+```
+
+##Display the date downloaded: 
+```{r computetime, echo=TRUE}
+dateDownloaded
+```
+
+##Activity data formatted and NA values replaced with 0:  
+```{r activityData, echo=TRUE }
+fullPath = paste(path, "/files/", sep="")
+activityData = read.csv(paste(fullPath,"activity.csv", sep=""), stringsAsFactors=F)
+activityData$date <- as.Date(activityData$date, "%Y-%m-%d")
+head(activityData, 6)
+```
+##What is the mean total number of steps taken per day?
+
+```{r meanPerDay and medianPerDay, echo=TRUE }
+totalStepsPerDay <- aggregate(steps ~ date, data = activityData, sum)
+meanSteps = as.integer(mean(totalStepsPerDay$steps, na.rm=TRUE))
+medianSteps = as.integer(median(totalStepsPerDay$steps, na.rm=TRUE))
+options(scipen=999)
+```
+##Plot the data as histogram
+```{r meanStepPlot, echo=TRUE}
+hist(totalStepsPerDay$steps, main="Histogram Number of Steps Per Day", 
+xlab = "Number of Steps Taken Per Day")
+```
+
+The mean number of steps: `r  meanSteps`  
+The median number of steps: `r medianSteps`  
+
+##What is the average daily activity pattern?  
+```{r averageSteps, echo=TRUE}
+stepsPerDay <- aggregate(steps ~ interval, data = activityData, mean)
+```
+##Plot the average steps per day
+```{r averageStepsPlot, echo=TRUE} 
+plot(stepsPerDay$interval, 
+     stepsPerDay$steps, 
+     type="l",
+     main="Average Number of Steps Per 5 minute interval",
+      xlab="Time Interval", 
+      ylab="Average Steps")
+abline(v = stepsPerDay[stepsPerDay$steps == max(stepsPerDay$steps), 1],
+       col="blue")
+text(x = stepsPerDay[stepsPerDay$steps == max(stepsPerDay$steps), 1], 
+     y = max(stepsPerDay$steps),
+     labels = as.integer(max(stepsPerDay$steps)),
+     cex=0.7, offset=10)
+maxActivity = stepsPerDay[stepsPerDay$steps == max(stepsPerDay$steps), 1]
+```
+
+The `r maxActivity`th interval contains the maximum number of steps per day.  
+
+##Imputing missing values  
+```{r check for NA values, echo=TRUE}
+numberNAs = sum(is.na(activityData$steps))
+```
+```{r swap out NA values, echo=TRUE}
+newActivityData <- activityData
+  for(i in 1:length(newActivityData$steps)) {
+    if(is.na(newActivityData$steps[i])){
+      meanActivity <- stepsPerDay[stepsPerDay$interval == newActivityData$interval[i], 2]
+      newActivityData$steps[i] <- meanActivity
+    }
+  }
+```
+```{r newMeanPerDay and newMedianPerDay with replaced NAs, echo=TRUE }
+newStepsPerDay <- aggregate(steps ~ date, data = newActivityData, sum)
+newMeanSteps = as.integer(mean(newStepsPerDay$steps, na.rm=TRUE))
+newMedianSteps = as.integer(median(newStepsPerDay$steps, na.rm=TRUE))
+options(scipen=999)
+```
+
+##Plot the data
+```{r newMeanStepPlot, echo=TRUE}
+hist(newStepsPerDay$steps, main="Histogram Number of Steps Per Day with replaced NAs", 
+xlab = "Number of Steps Taken Per Day")
+```
+
+The number of replaced NAs: `r  numberNAs`      
+The new mean number of steps: `r  newMeanSteps`    
+The new median number of steps: `r newMedianSteps`  
+
+##Are there differences in activity patterns between weekdays and weekends?
+```{r weekdays and weekends, echo=TRUE}
+weekdays = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+weekends = c("Saturday", "Sunday")
+```
+```{r create weekday and weekend labels in the data, echo=TRUE}
+weekDaysLabel = vector()
+newActivityData$date <- weekdays(newActivityData$date)
+for(i in 1:length(newActivityData$date)){
+  if(newActivityData$date[i] %in% weekdays) {
+    weekDaysLabel = c(weekDaysLabel, "weekday") 
+  }
+  else {  
+    weekDaysLabel = c(weekDaysLabel, "weekend")  
+  }
+  
+}
+newActivityData <- transform(newActivityData, weekDaysLabels = weekDaysLabel)
+```
+```{r calculate the meanStepsPerInterval, echo=TRUE}
+meanStepsPerInterval <- aggregate(steps ~ interval + weekDaysLabels, data = newActivityData, mean)
+```
+##Plot the Weekday versus Weekend Graph
+```{r Plot the Graph, echo=TRUE}
+library(lattice)
+xyplot(steps ~ interval | weekDaysLabels,
+       data = meanStepsPerInterval,
+       type="l",
+       xlab="Interval",
+       ylab="Number of Steps",
+       layout=c(1,2))
+```
+  
+The heights of the peaks in the weekend  
+graph and higher than the peaks in the   
+weekday graph, except  for the one peak   
+around 800. Most people sit at work  
+(no stepping). On Weekends more people   
+are stepping and less sitting.  
+
+
+
+
+
+
+
+
