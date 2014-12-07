@@ -34,10 +34,10 @@ dateDownloaded
 ```
 
 ```
-## [1] "Sat Dec 06 22:28:16 2014"
+## [1] "Sat Dec 06 22:53:48 2014"
 ```
 
-##Activity data formatted and NA values replaced with 0:  
+##Activity data formatted:  
 
 ```r
 fullPath = paste(path, "/files/", sep="")
